@@ -43,7 +43,7 @@ func main() {
 
 	r.HandleFunc("/orders", GetOrders).Methods("GET")
 	r.HandleFunc("/order/{OrderID}", GetOrder).Methods("GET")
-	//r.HandleFunc("/order", AddOrder).Methods("POST")
+	r.HandleFunc("/order", AddOrder).Methods("POST")
 	//r.HandleFunc("/order/{OrderID}", UpdateOrder).Methods("PUT")
 	//r.HandleFunc("/order/{OrderID}", DeleteOrder).Methods("DELETE")
 

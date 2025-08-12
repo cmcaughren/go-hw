@@ -16,7 +16,7 @@ type Order struct {
 	OrderNumber        string
 	CustomerID         int
 	OrderCreateDate    time.Time
-	OrderFulfilledDate time.Time
+	OrderFulfilledDate *time.Time //pointer so we can set this to null if needed
 	OrderTotal         float64
 	OrderTaxTotal      float64
 }
@@ -79,4 +79,85 @@ func GetOrder(w http.ResponseWriter, r *http.Request) {
 	//Send JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(order)
+}
+
+// Add a new order
+func AddOrder(w http.ResponseWriter, r *http.Request) {
+	var o Order
+	json.NewDecoder(r.Body).Decode(&o)
+	valid, errMsg := validateOrder(o)
+	if !valid {
+		fmt.Printf("Bad order data: %v\n", errMsg)
+		http.Error(w, errMsg, http.StatusBadRequest)
+		return
+	}
+
+	//"OUTPUT" with QueryRow will get us a return value - use of Exec to insert would give none
+	query := `INSERT INTO [Order] (OrderNumber, CustomerID, OrderCreateDate, OrderFulfilledDate, OrderTotal, OrderTaxTotal) 
+	OUTPUT INSERTED.OrderID, INSERTED.OrderNumber, INSERTED.CustomerID, INSERTED.OrderCreateDate, INSERTED.OrderFulfilledDate, INSERTED.OrderTotal, INSERTED.OrderTaxTotal
+	VALUES (@p1, @p2, @p3, @p4, @p5, @p6)`
+	var newOrder Order
+
+	err := db.QueryRow(query,
+		o.OrderNumber,
+		o.CustomerID,
+		o.OrderCreateDate,
+		o.OrderFulfilledDate,
+		o.OrderTotal,
+		o.OrderTaxTotal).Scan(
+		&newOrder.OrderID,
+		&newOrder.OrderNumber,
+		&newOrder.CustomerID,
+		&newOrder.OrderCreateDate,
+		&newOrder.OrderFulfilledDate,
+		&newOrder.OrderTotal,
+		&newOrder.OrderTaxTotal)
+	if err != nil {
+		fmt.Printf("Error adding order: %v\n", err)
+		http.Error(w, "Error adding order", http.StatusInternalServerError)
+		return
+	}
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(newOrder)
+}
+
+func validateOrder(order Order) (bool, string) {
+	// Validate OrderNumber
+	if len(order.OrderNumber) == 0 {
+		return false, "OrderNumber is required"
+	}
+	if len(order.OrderNumber) > 50 {
+		return false, "OrderNumber must be 50 characters or less"
+	}
+
+	// Validate CustomerID
+	if order.CustomerID <= 0 {
+		return false, "CustomerID is required and must be positive"
+	}
+
+	// Validate OrderCreateDate
+	if order.OrderCreateDate.IsZero() {
+		return false, "OrderCreateDate is required"
+	}
+	if order.OrderCreateDate.After(time.Now()) {
+		return false, "OrderCreateDate cannot be in the future"
+	}
+
+	// Validate OrderFulfilledDate (if provided, must be after create date)
+	if order.OrderFulfilledDate != nil && order.OrderFulfilledDate.Before(order.OrderCreateDate) {
+		return false, "OrderFulfilledDate must be after OrderCreateDate"
+	}
+
+	// Validate OrderTotal
+	if order.OrderTotal < 0 {
+		return false, "OrderTotal cannot be negative"
+	}
+
+	// Validate OrderTaxTotal
+	if order.OrderTaxTotal < 0 {
+		return false, "OrderTaxTotal cannot be negative"
+	}
+
+	return true, ""
 }
