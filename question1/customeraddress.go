@@ -80,7 +80,10 @@ func GetCustomerAddress(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(customerAddress)
 }
 
+//TODO Add get customer address by customerID
+
 // Add a new customer address
+// allows customer to have multiple addresses!
 func AddCustomerAddress(w http.ResponseWriter, r *http.Request) {
 	var ca CustomerAddress
 	json.NewDecoder(r.Body).Decode(&ca)
@@ -164,4 +167,64 @@ func validateCustomerAddress(customerAddress CustomerAddress) (bool, string) {
 	}
 
 	return true, ""
+}
+
+func UpdateCustomerAddress(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["CustomerAddressID"]
+
+	var ca CustomerAddress
+	json.NewDecoder(r.Body).Decode(&ca)
+	valid, errMsg := validateCustomerAddress(ca)
+	if !valid {
+		fmt.Printf("Bad value: %v\n", errMsg)
+		http.Error(w, errMsg, http.StatusBadRequest)
+		return
+	}
+
+	query := `
+		UPDATE CustomerAddress
+		SET CustomerID = @p1,
+		Line1 = @p2,
+		Line2 = @p3,
+		City = @p4,
+		StateProvince = @p5,
+		Country = @p6
+		OUTPUT INSERTED.CustomerAddressID,
+		INSERTED.CustomerID, 
+		INSERTED.Line1,
+		INSERTED.Line2, 
+		INSERTED.City, 
+		INSERTED.StateProvince, 
+		INSERTED.Country
+		WHERE CustomerAddressID = @p7`
+
+	var updatedCustomerAddress CustomerAddress
+	err := db.QueryRow(query,
+		ca.CustomerID,
+		ca.Line1,
+		ca.Line2,
+		ca.City,
+		ca.StateProvince,
+		ca.Country,
+		id).Scan(&updatedCustomerAddress.CustomerAddressID,
+		&updatedCustomerAddress.CustomerID,
+		&updatedCustomerAddress.Line1,
+		&updatedCustomerAddress.Line2,
+		&updatedCustomerAddress.City,
+		&updatedCustomerAddress.StateProvince,
+		&updatedCustomerAddress.Country)
+	if err == sql.ErrNoRows {
+		fmt.Printf("Customer Address does not exist: %v\n", err)
+		http.Error(w, "Customer Address does not exist", http.StatusNotFound)
+		return
+	} else if err != nil {
+		fmt.Printf("Error updating customer address: %v\n", err)
+		http.Error(w, "Error updating customer address", http.StatusInternalServerError)
+		return
+	}
+
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedCustomerAddress)
 }
