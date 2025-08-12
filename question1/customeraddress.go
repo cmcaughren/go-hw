@@ -235,7 +235,7 @@ func DeleteCustomerAddress(w http.ResponseWriter, r *http.Request) {
 
 	query := `DELETE FROM CustomerAddress 
 		OUTPUT DELETED.CustomerAddressID
-		WHERE CustomerAddressId = @p1`
+		WHERE CustomerAddressID = @p1`
 
 	var deletedID int
 	err := db.QueryRow(query, id).Scan(&deletedID)
