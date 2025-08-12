@@ -105,3 +105,41 @@ func validateProduct(product Product) (bool, string) {
 	}
 	return true, ""
 }
+
+func UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["ProductID"]
+
+	var p Product
+	json.NewDecoder(r.Body).Decode(&p)
+	valid, errMsg := validateProduct(p)
+	if !valid {
+		fmt.Printf("Bad value: %v\n", errMsg)
+		http.Error(w, errMsg, http.StatusBadRequest)
+		return
+	}
+
+	query := `
+		UPDATE Product
+		SET ProductName = @p1
+		OUTPUT INSERTED.ProductID,
+		INSERTED.ProductName
+		WHERE ProductID = @p2
+	`
+
+	var updatedProduct Product
+	err := db.QueryRow(query, p.ProductName, id).Scan(&updatedProduct.ProductID, &updatedProduct.ProductName)
+	if err == sql.ErrNoRows {
+		fmt.Printf("Product does not exist: %v\n", err)
+		http.Error(w, "Product does not exist", http.StatusNotFound)
+		return
+	} else if err != nil {
+		fmt.Printf("Error updating product: %v\n", err)
+		http.Error(w, "Error updating product", http.StatusInternalServerError)
+		return
+	}
+
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedProduct)
+}
