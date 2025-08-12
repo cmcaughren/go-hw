@@ -25,8 +25,6 @@ GO
 -- Who are the top 5 customers based on their total net sales 
 -- (i.e. net sales would be the total amount of sales they have minus 
 -- any returns they have made)
-
--- **Have I used the correct "join"?
 SELECT TOP 5 FullName, SUM(OrderTotal - AmountReturned) as net_sales
 FROM (
    (SELECT CONCAT(FirstName, " ", LastName) as FullName, [Order].OrderTotal, [Order].OrderID
@@ -55,6 +53,8 @@ GO
 --    What was the top coutnry from sales perspective from each age bracket
 --    and what was their total sales?
 
+DROP VIEW Customer_Agegroups;
+GO
 
 CREATE VIEW Customer_Agegroups AS
 SELECT CONCAT(FirstName, " ", LastName) as FullName, 
@@ -77,21 +77,19 @@ GROUP BY Age_Category
 ORDER BY total_sales DESC;
 GO
 
-SELECT Age_Category, SUM(OrderTotal) as total_sales, Country
-FROM Customer_Agegroups
-INNER JOIN CustomerAddress
+WITH SalesByAgeAndCountry AS (
+   SELECT Age_Category, SUM(OrderTotal) as total_sales, Country
+   FROM Customer_Agegroups
+   LEFT JOIN CustomerAddress
    ON Customer_Agegroups.CustomerID = CustomerAddress.CustomerID
-GROUP BY Age_Category, Country;
-GO
-
-SELECT Table_B.Age_Category, Table_B.Country, MAX(Table_B.total_sales) as highest_sales
-FROM (SELECT Age_Category, SUM(OrderTotal) as total_sales, Country
-      FROM Customer_Agegroups
-      INNER JOIN CustomerAddress
-      ON Customer_Agegroups.CustomerID = CustomerAddress.CustomerID
-      GROUP BY Age_Category, Country) as Table_B
-GROUP BY Table_B.Age_Category, Table_B.Country
-ORDER BY highest_sales DESC;
+  GROUP BY Age_Category, Country) 
+SELECT Age_Category, Country, total_sales
+FROM SalesByAgeAndCountry s1
+WHERE total_sales = (
+   SELECT MAX(total_sales)
+   FROM SalesByAgeAndCountry s2
+   WHERE s2.Age_Category = s1.Age_Category
+);
 GO
 
 -- Please produce the underlying data for a Histogram, that shows the number of orders
@@ -102,9 +100,48 @@ GO
 --    2 - 3 days - 400 orders
 --    3 - 4 days - 200 orders
 --    Greater than 4 days - 75 orders
+DROP VIEW Order_Fufillments;
+  GO
+
+CREATE VIEW Order_Fufillments AS
+SELECT 
+   OrderID,
+   OrderNumber,
+   CustomerID,
+   OrderCreateDate,
+   OrderFulfilledDate,
+   OrderTotal,
+   OrderTaxTotal,
+   CASE 
+      WHEN (DATEDIFF(day, OrderCreateDate, OrderFulfilledDate)) < 1 THEN 'Less than a day'
+      WHEN (DATEDIFF(day, OrderCreateDate, OrderFulfilledDate)) BETWEEN 1 AND 2 THEN '1 - 2 days'
+      WHEN (DATEDIFF(day, OrderCreateDate, OrderFulfilledDate)) BETWEEN 2 AND 3 THEN '2 - 3 days'
+      WHEN (DATEDIFF(day, OrderCreateDate, OrderFulfilledDate)) BETWEEN 3 AND 4 THEN '3 - 4 days'
+      WHEN (DATEDIFF(day, OrderCreateDate, OrderFulfilledDate)) > 4 THEN 'Greater than 4 days'
+      WHEN OrderFulfilledDate IS NULL THEN 'Not yet fufilled'
+      ELSE 'NO MATCH'
+   END AS Fufillment_Category
+FROM [Order];
+GO
+
+SELECT COUNT(*) as Orders_count, Fufillment_Category 
+FROM Order_Fufillments
+GROUP BY Fufillment_Category;
+
+
 
 -- What percentage of items that were ordered included a discount from the full price?
-
-
-
-
+WITH Numerator AS (
+   SELECT COUNT(*) as numeratorValue
+   FROM LineItem
+   WHERE LineItemDiscount != "0.00"
+), 
+Demoninator AS (
+   SELECT COUNT(*) as denominatorValue
+   FROM LineItem
+)
+SELECT 
+   (N.numeratorValue * 100) / D.denominatorValue AS Percent_at_discount
+FROM
+   Numerator N, Demoninator D;
+GO
