@@ -64,3 +64,44 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(product)
 }
+
+func AddProduct(w http.ResponseWriter, r *http.Request) {
+	var p Product
+	json.NewDecoder(r.Body).Decode(&p)
+	valid, errMsg := validateProduct(p)
+	if !valid {
+		fmt.Print("Bad product data: &v\n", errMsg)
+		http.Error(w, errMsg, http.StatusBadRequest)
+		return
+	}
+
+	//"OUTPUT" with QueryRow will get us a return value - use of Exec to insert would give none
+	query := `INSERT INTO Product (ProductName)
+	OUTPUT INSERTED.ProductID, INSERTED.ProductName
+	VALUES (@p1)`
+	var newProduct Product
+
+	err := db.QueryRow(query,
+		p.ProductName).Scan(
+		&newProduct.ProductID,
+		&newProduct.ProductName)
+	if err != nil {
+		fmt.Printf("Error adding product: %v\n", err)
+		http.Error(w, "Error adding product", http.StatusInternalServerError)
+		return
+	}
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(newProduct)
+}
+
+func validateProduct(product Product) (bool, string) {
+	// Validate ProductName
+	if len(product.ProductName) == 0 {
+		return false, "ProductName is required"
+	}
+	if len(product.ProductName) > 100 {
+		return false, "ProductName must be 100 characters or less"
+	}
+	return true, ""
+}
