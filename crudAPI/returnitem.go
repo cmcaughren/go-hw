@@ -78,6 +78,11 @@ func GetReturnItem(w http.ResponseWriter, r *http.Request) {
 
 // Add a new return item
 func AddReturnItem(w http.ResponseWriter, r *http.Request) {
+	// TODO: Verify OrderID exists
+	// TODO: Verify LineItemID exists
+	// TODO: Verify quantity doesn't exceed original
+	// TODO: Ensure AmountReturned is correct
+	// TODO: Update Order/Customer totals
 	var ri ReturnItem
 	json.NewDecoder(r.Body).Decode(&ri)
 	valid, errMsg := validateReturnItem(ri)
@@ -133,6 +138,7 @@ func validateReturnItem(returnItem ReturnItem) (bool, string) {
 	if returnItem.AmountReturned < 0 {
 		return false, "AmountReturned cannot be negative"
 	}
+	// TODO: Verify AmountReturned doesn't exceed original line item value
 
 	return true, ""
 }
@@ -141,6 +147,9 @@ func UpdateReturnItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["ReturnedItemID"]
 
+	// TODO: Verify OrderID exists
+	// TODO: Verify LineItemID exists
+	// TODO: Update Order/Customer totals
 	var ri ReturnItem
 	json.NewDecoder(r.Body).Decode(&ri)
 	valid, errMsg := validateReturnItem(ri)
@@ -193,6 +202,7 @@ func DeleteReturnItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["ReturnedItemID"]
 
+	// TODO: Update Order/Customer totals
 	query := `DELETE FROM ReturnItem
 		OUTPUT DELETED.ReturnedItemID
 		WHERE ReturnedItemID = @p1`

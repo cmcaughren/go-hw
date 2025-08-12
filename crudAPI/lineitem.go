@@ -81,6 +81,9 @@ func GetLineItem(w http.ResponseWriter, r *http.Request) {
 
 // Add a new line item
 func AddLineItem(w http.ResponseWriter, r *http.Request) {
+	// TODO: Verify OrderID exists
+	// TODO: Verify ProductID exists
+	// TODO: Update Order totals after insert
 	var li LineItem
 	json.NewDecoder(r.Body).Decode(&li)
 	valid, errMsg := validateLineItem(li)
@@ -154,6 +157,9 @@ func UpdateLineItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["LineItemID"]
 
+	// TODO: Verify OrderID exists
+	// TODO: Verify ProductID exists
+	// TODO: Update Order totals after update
 	var li LineItem
 	json.NewDecoder(r.Body).Decode(&li)
 	valid, errMsg := validateLineItem(li)
@@ -210,6 +216,7 @@ func DeleteLineItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["LineItemID"]
 
+	// TODO: Update Order totals after delete
 	query := `DELETE FROM LineItem
 		OUTPUT DELETED.LineItemID
 		WHERE LineItemID = @p1`

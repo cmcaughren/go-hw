@@ -85,18 +85,19 @@ func GetCustomerAddress(w http.ResponseWriter, r *http.Request) {
 // Add a new customer address
 // allows customer to have multiple addresses!
 func AddCustomerAddress(w http.ResponseWriter, r *http.Request) {
+	// TODO: Verify CustomerID exists
 	var ca CustomerAddress
 	json.NewDecoder(r.Body).Decode(&ca)
 	valid, errMsg := validateCustomerAddress(ca)
 	if !valid {
-		fmt.Print("Bad customer data: &v\n", errMsg)
+		fmt.Printf("Bad customer data: %v\n", errMsg)
 		http.Error(w, errMsg, http.StatusBadRequest)
 		return
 	}
 
 	//"OUTPUT" with QueryRow will get us a return value - use of Exec to insert would give none
 	query := `INSERT INTO CustomerAddress (CustomerID, Line1, Line2, City, StateProvince, Country) 
-	OUTPUT INSERTED.CustomerID, INSERTED.Line1, INSERTED.Line2, INSERTED.City, INSERTED.Stateprovince, INSERTED.Country
+	OUTPUT INSERTED.CustomerAddressID, INSERTED.CustomerID, INSERTED.Line1, INSERTED.Line2, INSERTED.City, INSERTED.StateProvince, INSERTED.Country
 	VALUES (@p1, @p2, @p3, @p4, @p5, @p6)`
 	var newCustomerAddress CustomerAddress
 
@@ -173,6 +174,7 @@ func UpdateCustomerAddress(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["CustomerAddressID"]
 
+	// TODO: Verify CustomerID exists
 	var ca CustomerAddress
 	json.NewDecoder(r.Body).Decode(&ca)
 	valid, errMsg := validateCustomerAddress(ca)

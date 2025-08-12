@@ -84,6 +84,8 @@ func GetOrder(w http.ResponseWriter, r *http.Request) {
 
 // Add a new order
 func AddOrder(w http.ResponseWriter, r *http.Request) {
+	// TODO: Verify CustomerID exists
+	// TODO: Update Customer totals
 	var o Order
 	json.NewDecoder(r.Body).Decode(&o)
 	valid, errMsg := validateOrder(o)
@@ -131,6 +133,7 @@ func validateOrder(order Order) (bool, string) {
 	if len(order.OrderNumber) > 50 {
 		return false, "OrderNumber must be 50 characters or less"
 	}
+	// TODO: Check for duplicate OrderNumber
 
 	// Validate CustomerID
 	if order.CustomerID <= 0 {
@@ -154,11 +157,13 @@ func validateOrder(order Order) (bool, string) {
 	if order.OrderTotal < 0 {
 		return false, "OrderTotal cannot be negative"
 	}
+	// TODO: Calculate OrderTotal from LineItems instead of user input
 
 	// Validate OrderTaxTotal
 	if order.OrderTaxTotal < 0 {
 		return false, "OrderTaxTotal cannot be negative"
 	}
+	// TODO: Calculate tax automatically instead of user input
 
 	return true, ""
 }
@@ -167,6 +172,8 @@ func UpdateOrder(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["OrderID"]
 
+	// TODO: Verify CustomerID exists
+	// TODO: Update Customer totals (both old and new if CustomerID changed)
 	var o Order
 	json.NewDecoder(r.Body).Decode(&o)
 	valid, errMsg := validateOrder(o)
@@ -227,6 +234,8 @@ func DeleteOrder(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["OrderID"]
 
+	// TODO: Update Customer totals after delete
+	// TODO: Check for associated LineItems/Returns before delete
 	query := `DELETE FROM [Order]
 		OUTPUT DELETED.OrderID
 		WHERE OrderID = @p1`
