@@ -29,11 +29,11 @@ func main() {
 	r.HandleFunc("/customer/{CustomerID}", UpdateCustomer).Methods("PUT")
 	r.HandleFunc("/customer/{CustomerID}", DeleteCustomer).Methods("DELETE")
 
-	r.HandleFunc("/customerAddresses", GetCustomerAddresses).Methods("GET")
-	r.HandleFunc("/customerAddress/{CustomerAddressID}", GetCustomerAddress).Methods("GET")
-	r.HandleFunc("/customerAddress", AddCustomerAddress).Methods("POST")
-	r.HandleFunc("/customerAddress/{CustomerAddressID}", UpdateCustomerAddress).Methods("PUT")
-	r.HandleFunc("/customerAddress/{CustomerAddressID}", DeleteCustomerAddress).Methods("DELETE")
+	r.HandleFunc("/customer-addresses", GetCustomerAddresses).Methods("GET")
+	r.HandleFunc("/customer-address/{CustomerAddressID}", GetCustomerAddress).Methods("GET")
+	r.HandleFunc("/customer-address", AddCustomerAddress).Methods("POST")
+	r.HandleFunc("/customer-address/{CustomerAddressID}", UpdateCustomerAddress).Methods("PUT")
+	r.HandleFunc("/customer-address/{CustomerAddressID}", DeleteCustomerAddress).Methods("DELETE")
 
 	r.HandleFunc("/products", GetProducts).Methods("GET")
 	r.HandleFunc("/product/{ProductID}", GetProduct).Methods("GET")
@@ -47,17 +47,17 @@ func main() {
 	r.HandleFunc("/order/{OrderID}", UpdateOrder).Methods("PUT")
 	r.HandleFunc("/order/{OrderID}", DeleteOrder).Methods("DELETE")
 
-	r.HandleFunc("/lineitems", GetLineItems).Methods("GET")
-	r.HandleFunc("/lineitem/{LineItemID}", GetLineItem).Methods("GET")
-	r.HandleFunc("/lineitem", AddLineItem).Methods("POST")
-	r.HandleFunc("/lineitem/{LineItemID}", UpdateLineItem).Methods("PUT")
-	r.HandleFunc("/lineitem/{LineItemID}", DeleteLineItem).Methods("DELETE")
+	r.HandleFunc("/line-items", GetLineItems).Methods("GET")
+	r.HandleFunc("/line-item/{LineItemID}", GetLineItem).Methods("GET")
+	r.HandleFunc("/line-item", AddLineItem).Methods("POST")
+	r.HandleFunc("/line-item/{LineItemID}", UpdateLineItem).Methods("PUT")
+	r.HandleFunc("/line-item/{LineItemID}", DeleteLineItem).Methods("DELETE")
 
-	r.HandleFunc("/returnitems", GetReturnItems).Methods("GET")
-	r.HandleFunc("/returnitem/{ReturnedItemID}", GetReturnItem).Methods("GET")
-	r.HandleFunc("/returnitem", AddReturnItem).Methods("POST")
-	r.HandleFunc("/returnitem/{ReturnedItemID}", UpdateReturnItem).Methods("PUT")
-	r.HandleFunc("/returnitem/{ReturnedItemID}", DeleteReturnItem).Methods("DELETE")
+	r.HandleFunc("/return-items", GetReturnItems).Methods("GET")
+	r.HandleFunc("/return-item/{ReturnedItemID}", GetReturnItem).Methods("GET")
+	r.HandleFunc("/return-item", AddReturnItem).Methods("POST")
+	r.HandleFunc("/return-item/{ReturnedItemID}", UpdateReturnItem).Methods("PUT")
+	r.HandleFunc("/return-item/{ReturnedItemID}", DeleteReturnItem).Methods("DELETE")
 
 	//Start Server
 	port := ":8080"
