@@ -47,6 +47,12 @@ func main() {
 	r.HandleFunc("/order/{OrderID}", UpdateOrder).Methods("PUT")
 	r.HandleFunc("/order/{OrderID}", DeleteOrder).Methods("DELETE")
 
+	r.HandleFunc("/lineitems", GetLineItems).Methods("GET")
+	//r.HandleFunc("/lineitem/{LineItemID}", GetLineItem).Methods("GET")
+	//r.HandleFunc("/lineitem", AddLineItem).Methods("POST")
+	//r.HandleFunc("/lineitem/{LineItemID}", UpdateLineItem).Methods("PUT")
+	//r.HandleFunc("/lineitem/{LineItemID}", DeleteLineItem).Methods("DELETE")
+
 	//Start Server
 	port := ":8080"
 	fmt.Printf("Starting server on http://localhost%s\n", port)
