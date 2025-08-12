@@ -49,8 +49,8 @@ func main() {
 
 	r.HandleFunc("/lineitems", GetLineItems).Methods("GET")
 	r.HandleFunc("/lineitem/{LineItemID}", GetLineItem).Methods("GET")
-	//r.HandleFunc("/lineitem", AddLineItem).Methods("POST")
-	//r.HandleFunc("/lineitem/{LineItemID}", UpdateLineItem).Methods("PUT")
+	r.HandleFunc("/lineitem", AddLineItem).Methods("POST")
+	r.HandleFunc("/lineitem/{LineItemID}", UpdateLineItem).Methods("PUT")
 	//r.HandleFunc("/lineitem/{LineItemID}", DeleteLineItem).Methods("DELETE")
 
 	//Start Server
