@@ -228,3 +228,28 @@ func UpdateCustomerAddress(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedCustomerAddress)
 }
+
+func DeleteCustomerAddress(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["CustomerAddressID"]
+
+	query := `DELETE FROM CustomerAddress 
+		OUTPUT DELETED.CustomerAddressID
+		WHERE CustomerAddressId = @p1`
+
+	var deletedID int
+	err := db.QueryRow(query, id).Scan(&deletedID)
+	if err == sql.ErrNoRows {
+		fmt.Printf("Customer Address does not exist: %v\n", err)
+		http.Error(w, "Customer Address does not exist", http.StatusNotFound)
+		return
+	} else if err != nil {
+		fmt.Printf("Error deleting customer address: %v\n", err)
+		http.Error(w, "Error deleting customer address", http.StatusInternalServerError)
+		return
+	}
+
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(deletedID)
+}
