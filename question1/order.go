@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -220,4 +221,33 @@ func UpdateOrder(w http.ResponseWriter, r *http.Request) {
 	//Send JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedOrder)
+}
+
+func DeleteOrder(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["OrderID"]
+
+	query := `DELETE FROM [Order]
+		OUTPUT DELETED.OrderID
+		WHERE OrderID = @p1`
+
+	var deletedID int
+	err := db.QueryRow(query, id).Scan(&deletedID)
+	if err == sql.ErrNoRows {
+		fmt.Printf("Order does not exist: %v\n", err)
+		http.Error(w, "Order does not exist", http.StatusNotFound)
+		return
+	} else if err != nil && strings.Contains(err.Error(), "REFERENCE constraint") {
+		fmt.Printf("Foreign key constraint error: %v\n", err)
+		http.Error(w, "Cannot delete order: it is referenced by existing records", http.StatusConflict)
+		return
+	} else if err != nil {
+		fmt.Printf("Error deleting order: %v\n", err)
+		http.Error(w, "Error deleting order", http.StatusInternalServerError)
+		return
+	}
+
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(deletedID)
 }
