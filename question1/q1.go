@@ -29,6 +29,18 @@ func main() {
 	r.HandleFunc("/customer/{CustomerID}", UpdateCustomer).Methods("PUT")
 	r.HandleFunc("/customer/{CustomerID}", DeleteCustomer).Methods("DELETE")
 
+	r.HandleFunc("/customerAddresses", GetCustomerAddresses).Methods("GET")
+	r.HandleFunc("/customerAddress/{CustomerAddressID}", GetCustomerAddress).Methods("GET")
+	r.HandleFunc("/customerAddress", AddCustomerAddress).Methods("POST")
+	r.HandleFunc("/customerAddress/{CustomerAddressID}", UpdateCustomerAddress).Methods("PUT")
+	r.HandleFunc("/customerAddress/{CustomerAddressID}", DeleteCustomerAddress).Methods("DELETE")
+
+	r.HandleFunc("/products", GetProducts).Methods("GET")
+	//r.HandleFunc("/product/{ProductID}", GetProduct).Methods("GET")
+	//r.HandleFunc("/product", AddProduct).Methods("POST")
+	//r.HandleFunc("/product/{ProductID}", UpdateProduct).Methods("PUT")
+	//r.HandleFunc("/product/{ProductID}", DeleteProduct).Methods("DELETE")
+
 	//Start Server
 	port := ":8080"
 	fmt.Printf("Starting server on http://localhost%s\n", port)
