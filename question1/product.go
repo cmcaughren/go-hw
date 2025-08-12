@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	_ "github.com/microsoft/go-mssqldb"
@@ -142,4 +143,35 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	//Send JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedProduct)
+}
+
+func DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["ProductID"]
+
+	//TODO check for foriegn key references which would prevent deletion ahead of time
+
+	query := `DELETE FROM Product
+		OUTPUT DELETED.ProductID
+		WHERE ProductID = @p1`
+
+	var deletedID int
+	err := db.QueryRow(query, id).Scan(&deletedID)
+	if err == sql.ErrNoRows {
+		fmt.Printf("Product does not exist: %v\n", err)
+		http.Error(w, "Product does not exist", http.StatusNotFound)
+		return
+	} else if strings.Contains(err.Error(), "REFERENCE constraint") {
+		fmt.Printf("Foreign key constraint error: %v\n", err)
+		http.Error(w, "Cannot delete product: it is referenced by existing records", http.StatusConflict)
+		return
+	} else if err != nil {
+		fmt.Printf("Error deleting product: %v\n", err)
+		http.Error(w, "Error deleting product", http.StatusInternalServerError)
+		return
+	}
+
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(deletedID)
 }

@@ -39,7 +39,7 @@ func main() {
 	r.HandleFunc("/product/{ProductID}", GetProduct).Methods("GET")
 	r.HandleFunc("/product", AddProduct).Methods("POST")
 	r.HandleFunc("/product/{ProductID}", UpdateProduct).Methods("PUT")
-	//r.HandleFunc("/product/{ProductID}", DeleteProduct).Methods("DELETE")
+	r.HandleFunc("/product/{ProductID}", DeleteProduct).Methods("DELETE")
 
 	//Start Server
 	port := ":8080"
