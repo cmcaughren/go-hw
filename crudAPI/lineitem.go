@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	_ "github.com/microsoft/go-mssqldb"
@@ -142,7 +143,7 @@ func validateLineItem(lineItem LineItem) (bool, string) {
 	if lineItem.LineItemDiscount < 0 {
 		return false, "LineItemDiscount cannot be negative"
 	}
-	if lineItem.LineItemDiscount > lineItem.LineItemUnitPrice * float64(lineItem.Quantity) {
+	if lineItem.LineItemDiscount > lineItem.LineItemUnitPrice*float64(lineItem.Quantity) {
 		return false, "LineItemDiscount cannot exceed total price"
 	}
 
@@ -203,4 +204,33 @@ func UpdateLineItem(w http.ResponseWriter, r *http.Request) {
 	//Send JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedLineItem)
+}
+
+func DeleteLineItem(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["LineItemID"]
+
+	query := `DELETE FROM LineItem
+		OUTPUT DELETED.LineItemID
+		WHERE LineItemID = @p1`
+
+	var deletedID int
+	err := db.QueryRow(query, id).Scan(&deletedID)
+	if err == sql.ErrNoRows {
+		fmt.Printf("Line Item does not exist: %v\n", err)
+		http.Error(w, "Line Item does not exist", http.StatusNotFound)
+		return
+	} else if err != nil && strings.Contains(err.Error(), "REFERENCE constraint") {
+		fmt.Printf("Foreign key constraint error: %v\n", err)
+		http.Error(w, "Cannot delete line item: it is referenced by existing records", http.StatusConflict)
+		return
+	} else if err != nil {
+		fmt.Printf("Error deleting line item: %v\n", err)
+		http.Error(w, "Error deleting line item", http.StatusInternalServerError)
+		return
+	}
+
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(deletedID)
 }

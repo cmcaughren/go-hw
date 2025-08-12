@@ -51,7 +51,13 @@ func main() {
 	r.HandleFunc("/lineitem/{LineItemID}", GetLineItem).Methods("GET")
 	r.HandleFunc("/lineitem", AddLineItem).Methods("POST")
 	r.HandleFunc("/lineitem/{LineItemID}", UpdateLineItem).Methods("PUT")
-	//r.HandleFunc("/lineitem/{LineItemID}", DeleteLineItem).Methods("DELETE")
+	r.HandleFunc("/lineitem/{LineItemID}", DeleteLineItem).Methods("DELETE")
+
+	r.HandleFunc("/returnitems", GetReturnItems).Methods("GET")
+	r.HandleFunc("/returnitem/{ReturnedItemID}", GetReturnItem).Methods("GET")
+	r.HandleFunc("/returnitem", AddReturnItem).Methods("POST")
+	r.HandleFunc("/returnitem/{ReturnedItemID}", UpdateReturnItem).Methods("PUT")
+	r.HandleFunc("/returnitem/{ReturnedItemID}", DeleteReturnItem).Methods("DELETE")
 
 	//Start Server
 	port := ":8080"
