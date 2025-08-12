@@ -1,10 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	_ "github.com/microsoft/go-mssqldb"
 )
 
@@ -46,4 +48,32 @@ func GetLineItems(w http.ResponseWriter, r *http.Request) {
 	//Send JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(lineItems)
+}
+
+// Get a single line item, by LineItemID
+func GetLineItem(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["LineItemID"]
+
+	query := "SELECT * FROM LineItem WHERE LineItemID = @p1"
+	var lineItem LineItem
+	err := db.QueryRow(query, id).Scan(&lineItem.LineItemID,
+		&lineItem.OrderID,
+		&lineItem.ProductID,
+		&lineItem.LineItemUnitPrice,
+		&lineItem.Quantity,
+		&lineItem.LineItemDiscount)
+	if err == sql.ErrNoRows {
+		fmt.Printf("LineItem Not Found: %v\n", err)
+		http.Error(w, "LineItem Not Found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		fmt.Printf("Scan error: %v\n", err)
+		http.Error(w, "Failed to fetch line item", http.StatusInternalServerError)
+		return
+	}
+
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(lineItem)
 }
