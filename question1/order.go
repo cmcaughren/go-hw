@@ -161,3 +161,63 @@ func validateOrder(order Order) (bool, string) {
 
 	return true, ""
 }
+
+func UpdateOrder(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["OrderID"]
+
+	var o Order
+	json.NewDecoder(r.Body).Decode(&o)
+	valid, errMsg := validateOrder(o)
+	if !valid {
+		fmt.Printf("Bad value: %v\n", errMsg)
+		http.Error(w, errMsg, http.StatusBadRequest)
+		return
+	}
+
+	query := `
+		UPDATE [Order]
+		SET OrderNumber = @p1,
+		CustomerID = @p2,
+		OrderCreateDate = @p3,
+		OrderFulfilledDate = @p4,
+		OrderTotal = @p5,
+		OrderTaxTotal = @p6
+		OUTPUT INSERTED.OrderID,
+		INSERTED.OrderNumber, 
+		INSERTED.CustomerID,
+		INSERTED.OrderCreateDate, 
+		INSERTED.OrderFulfilledDate, 
+		INSERTED.OrderTotal, 
+		INSERTED.OrderTaxTotal
+		WHERE OrderID = @p7`
+
+	var updatedOrder Order
+	err := db.QueryRow(query,
+		o.OrderNumber,
+		o.CustomerID,
+		o.OrderCreateDate,
+		o.OrderFulfilledDate,
+		o.OrderTotal,
+		o.OrderTaxTotal,
+		id).Scan(&updatedOrder.OrderID,
+		&updatedOrder.OrderNumber,
+		&updatedOrder.CustomerID,
+		&updatedOrder.OrderCreateDate,
+		&updatedOrder.OrderFulfilledDate,
+		&updatedOrder.OrderTotal,
+		&updatedOrder.OrderTaxTotal)
+	if err == sql.ErrNoRows {
+		fmt.Printf("Order does not exist: %v\n", err)
+		http.Error(w, "Order does not exist", http.StatusNotFound)
+		return
+	} else if err != nil {
+		fmt.Printf("Error updating order: %v\n", err)
+		http.Error(w, "Error updating order", http.StatusInternalServerError)
+		return
+	}
+
+	//Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedOrder)
+}
